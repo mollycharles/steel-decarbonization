@@ -67,6 +67,20 @@ aggregate_regions <- function(d, mapping, colname="agg_region") {
     return(d.agg)
 }
 
+# same as above but calculating average of aggregated regions instead of sum
+aggregate_regions_avg <- function(d, mapping, colname="agg_region") {
+    d <- merge(d, mapping[, c("region", colname)], all.x=TRUE)
+    # If a region was not including in the mapping use the original name
+    d[is.na(d[,colname]), colname] <- d[is.na(d[,colname]), "region"]
+    names_keep <- names(d)[ !(names(d) %in% c("region", "value")) ]
+    agg_formula <- as.formula(paste("value ~", paste(names_keep, collapse=" + ")))
+    d.agg <- aggregate(agg_formula, d, FUN=mean)
+    d.agg$region <- d.agg[, colname]
+    d.agg <- d.agg[, names(d)]
+    d.agg[, colname] <- NULL
+    return(d.agg)
+}
+
 # -----------------------------------------------------------------------------
 # Compute "energy reduction" or more generically the difference in the total sum
 # of some variable of interest named by var_name between scenarios from the base
